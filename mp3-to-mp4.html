@@ -42,7 +42,6 @@
       overflow-x: hidden;
     }
 
-    /* Navigation Bar */
     .nav-bar {
       display: flex;
       gap: 8px;
@@ -70,7 +69,6 @@
       box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
-    /* Modern App Card */
     .app-card {
       width: 100%;
       max-width: 540px;
@@ -122,7 +120,6 @@
       font-size: 0.9rem;
     }
 
-    /* Drag & Drop Area */
     .drop-area {
       border: 1.5px dashed rgba(255, 255, 255, 0.15);
       background: rgba(255, 255, 255, 0.02);
@@ -185,7 +182,6 @@
       word-break: break-all;
     }
 
-    /* Buttons */
     .btn {
       width: 100%;
       padding: 16px;
@@ -265,7 +261,7 @@
     </div>
 
     <div class="drop-area" id="dropZone">
-      <input type="file" id="uploader" accept="audio/mp3,audio/mpeg" />
+      <input type="file" id="uploader" accept="audio/mp3,audio/*" />
       <div class="upload-icon">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 .895-2 3-2 3 .895 3 2zm12 0c0 1.105-1.343 2-3 2s-3-.895-3-2 .895-2 3-2 3 .895 3 2zM9 10l12-3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -294,7 +290,10 @@
 
   <script>
     const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: false });
+    const ffmpeg = createFFmpeg({
+      log: false,
+      corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+    });
 
     const uploader = document.getElementById('uploader');
     const dropZone = document.getElementById('dropZone');
@@ -309,43 +308,25 @@
     async function initFFmpeg() {
       try {
         await ffmpeg.load();
-        status.innerText = 'Ready. Select or drop an MP3 audio file.';
+        status.innerText = 'Ready. Select or drop an MP3 file.';
       } catch (error) {
         status.innerText = 'Error loading engine. Please reload.';
         console.error(error);
       }
     }
-
     initFFmpeg();
 
     uploader.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        handleFileSelect(e.target.files[0]);
-      }
+      if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
     });
 
-    ['dragenter', 'dragover'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => {
-        e.preventDefault();
-        dropZone.classList.add('dragover');
-      }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => {
-        e.preventDefault();
-        dropZone.classList.remove('dragover');
-      }, false);
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+      dropZone.addEventListener(evt, (e) => e.preventDefault(), false);
     });
 
     dropZone.addEventListener('drop', (e) => {
       const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.includes('audio')) {
-        uploader.files = files;
-        handleFileSelect(files[0]);
-      } else {
-        status.innerText = 'Please select a valid MP3 file.';
-      }
+      if (files.length > 0) handleFileSelect(files[0]);
     });
 
     function handleFileSelect(file) {
@@ -353,7 +334,6 @@
       dropTitle.innerText = 'File loaded';
       filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
       filePill.style.display = 'inline-block';
-      filePill.className = 'file-pill';
       convertBtn.disabled = !ffmpeg.isLoaded();
       downloadLink.style.display = 'none';
       status.innerText = 'Ready to convert.';
@@ -369,10 +349,9 @@
       try {
         ffmpeg.FS('writeFile', 'input.mp3', await fetchFile(selectedFile));
 
-        // Generate solid color 720p video background paired with the input MP3
         await ffmpeg.run(
           '-f', 'lavfi',
-          '-i', 'color=c=0x090a0f:s=1280x720:r=25',
+          '-i', 'color=c=0x090a0f:s=640x360:r=1',
           '-i', 'input.mp3',
           '-c:v', 'libx264',
           '-tune', 'stillimage',
