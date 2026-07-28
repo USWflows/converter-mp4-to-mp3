@@ -295,98 +295,155 @@
   </div>
 
   <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({
-      log: false,
-      corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
-    });
+  // Visualizer Animation
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  let isProcessing = false;
 
-    const uploader = document.getElementById('uploader');
-    const dropZone = document.getElementById('dropZone');
-    const dropTitle = document.getElementById('dropTitle');
-    const filePill = document.getElementById('filePill');
-    const convertBtn = document.getElementById('convertBtn');
-    const status = document.getElementById('status');
-    const downloadLink = document.getElementById('downloadLink');
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
 
-    let selectedFile = null;
+  function drawWave(time) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const bars = 32;
+    const barWidth = 3;
+    const gap = (canvas.width - (bars * barWidth)) / (bars + 1);
 
-    async function initFFmpeg() {
-      try {
-        await ffmpeg.load();
-        status.innerText = 'Ready. Select or drop an MP3 file.';
-      } catch (error) {
-        status.innerText = 'Error loading engine. Please reload.';
-        console.error(error);
-      }
+    for (let i = 0; i < bars; i++) {
+      const x = gap + i * (barWidth + gap);
+      let height = isProcessing ? Math.sin(time * 0.005 + i * 0.3) * 16 + 20 : Math.sin(i * 0.4) * 4 + 8;
+      const y = (canvas.height - height) / 2;
+      ctx.fillStyle = isProcessing ? '#06b6d4' : '#334155';
+      ctx.beginPath();
+      ctx.roundRect(x, y, barWidth, height, 2);
+      ctx.fill();
     }
-    initFFmpeg();
+    requestAnimationFrame(drawWave);
+  }
+  requestAnimationFrame(drawWave);
 
-    uploader.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
-    });
+  // FFmpeg Engine Setup
+  const { createFFmpeg, fetchFile } = FFmpeg;
+  const ffmpeg = createFFmpeg({
+    log: true,
+    corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
+  });
 
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => e.preventDefault(), false);
-    });
+  const uploader = document.getElementById('uploader');
+  const dropZone = document.getElementById('dropZone');
+  const dropTitle = document.getElementById('dropTitle');
+  const filePill = document.getElementById('filePill');
+  const convertBtn = document.getElementById('convertBtn');
+  const status = document.getElementById('status');
+  const downloadLink = document.getElementById('downloadLink');
 
-    dropZone.addEventListener('drop', (e) => {
-      const files = e.dataTransfer.files;
-      if (files.length > 0) handleFileSelect(files[0]);
-    });
+  let selectedFile = null;
 
-    function handleFileSelect(file) {
-  selectedFile = file;
-  dropTitle.innerText = 'File loaded';
-  filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
-  filePill.style.display = 'inline-block';
+  // Track FFmpeg progress and log messages
+  ffmpeg.setProgress(({ ratio }) => {
+    if (isProcessing && ratio > 0) {
+      const percent = Math.round(ratio * 100);
+      status.innerHTML = `<span class="spinner"></span> Converting... ${percent}%`;
+    }
+  });
+
+  async function initFFmpeg() {
+    try {
+      status.innerText = 'Downloading audio engine...';
+      await ffmpeg.load();
+      status.innerText = 'Engine ready. Drop a file to start.';
+      // Enable conversion if a file was already picked prior to load
+      if (selectedFile) convertBtn.disabled = false;
+    } catch (error) {
+      status.innerText = 'Failed to load engine. Please refresh page.';
+      console.error(error);
+    }
+  }
   
-  // THIS LINE ENABLES THE BUTTON:
-  convertBtn.disabled = false; 
-  
-  downloadLink.style.display = 'none';
-  status.innerText = 'Ready to convert.';
-}
+  // Start loading immediately
+  initFFmpeg();
 
-    convertBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
+  // File handling
+  uploader.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
+  });
 
-      convertBtn.disabled = true;
-      downloadLink.style.display = 'none';
-      status.innerHTML = `<span class="spinner"></span> Generating MP4 video container...`;
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, (e) => e.preventDefault(), false);
+  });
 
-      try {
-        ffmpeg.FS('writeFile', 'input.mp3', await fetchFile(selectedFile));
+  dropZone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFileSelect(files[0]);
+  });
 
-        await ffmpeg.run(
-          '-f', 'lavfi',
-          '-i', 'color=c=0x090a0f:s=640x360:r=1',
-          '-i', 'input.mp3',
-          '-c:v', 'libx264',
-          '-tune', 'stillimage',
-          '-c:a', 'aac',
-          '-b:a', '192k',
-          '-pix_fmt', 'yuv420p',
-          '-shortest',
-          'output.mp4'
-        );
+  function handleFileSelect(file) {
+    selectedFile = file;
+    dropTitle.innerText = 'File loaded';
+    filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
+    filePill.style.display = 'inline-block';
+    
+    // Enable button right away if engine is loaded, or wait for initFFmpeg
+    convertBtn.disabled = !ffmpeg.isLoaded();
+    downloadLink.style.display = 'none';
+    
+    if (ffmpeg.isLoaded()) {
+      status.innerText = 'File ready. Click Convert to start.';
+    } else {
+      status.innerText = 'File selected. Waiting for engine to finish loading...';
+    }
+  }
 
-        const data = ffmpeg.FS('readFile', 'output.mp4');
-        const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
-        const url = URL.createObjectURL(mp4Blob);
+  // Conversion Execution
+  convertBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
 
-        downloadLink.href = url;
-        downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + ".mp4";
-        downloadLink.style.display = 'flex';
+    const bitrate = document.querySelector('input[name="bitrate"]:checked')?.value || '192k';
+    const ext = selectedFile.name.split('.').pop() || 'mp4';
+    const inFileName = `input.${ext}`;
 
-        status.innerText = 'Conversion finished!';
-      } catch (error) {
-        status.innerText = 'An error occurred during video creation.';
-        console.error(error);
-      } finally {
-        convertBtn.disabled = false;
-      }
-    });
-  </script>
+    convertBtn.disabled = true;
+    downloadLink.style.display = 'none';
+    isProcessing = true;
+
+    try {
+      status.innerHTML = `<span class="spinner"></span> Reading file into memory...`;
+      const fileData = await selectedFile.arrayBuffer();
+      
+      status.innerHTML = `<span class="spinner"></span> Preparing encoder...`;
+      ffmpeg.FS('writeFile', inFileName, new Uint8Array(fileData));
+
+      status.innerHTML = `<span class="spinner"></span> Starting conversion...`;
+      await ffmpeg.run(
+        '-i', inFileName,
+        '-vn',
+        '-acodec', 'libmp3lame',
+        '-b:a', bitrate,
+        'output.mp3'
+      );
+
+      status.innerHTML = `<span class="spinner"></span> Finishing up...`;
+      const data = ffmpeg.FS('readFile', 'output.mp3');
+      const mp3Blob = new Blob([data.buffer], { type: 'audio/mp3' });
+      const url = URL.createObjectURL(mp3Blob);
+
+      downloadLink.href = url;
+      downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
+      downloadLink.style.display = 'flex';
+
+      status.innerText = 'Conversion finished!';
+    } catch (error) {
+      status.innerText = 'Error converting file. Please try again.';
+      console.error(error);
+    } finally {
+      isProcessing = false;
+      convertBtn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>
