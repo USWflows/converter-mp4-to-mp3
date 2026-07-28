@@ -336,14 +336,17 @@
     });
 
     function handleFileSelect(file) {
-      selectedFile = file;
-      dropTitle.innerText = 'File loaded';
-      filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
-      filePill.style.display = 'inline-block';
-      convertBtn.disabled = !ffmpeg.isLoaded();
-      downloadLink.style.display = 'none';
-      status.innerText = 'Ready to convert.';
-    }
+  selectedFile = file;
+  dropTitle.innerText = 'File loaded';
+  filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
+  filePill.style.display = 'inline-block';
+  
+  // THIS LINE ENABLES THE BUTTON:
+  convertBtn.disabled = false; 
+  
+  downloadLink.style.display = 'none';
+  status.innerText = 'Ready to convert.';
+}
 
     convertBtn.addEventListener('click', async () => {
       if (!selectedFile) return;
