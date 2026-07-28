@@ -393,7 +393,7 @@
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Download MP3 File
+      Save MP3 File
     </a>
 
     <div class="status-bar" id="status">
@@ -448,6 +448,8 @@
     const downloadLink = document.getElementById('downloadLink');
 
     let selectedFile = null;
+    let outputBlob = null;
+    let outputFileName = "";
 
     ffmpeg.setProgress(({ ratio }) => {
       if (isProcessing && ratio > 0) {
@@ -528,11 +530,12 @@
 
         status.innerHTML = `<span class="spinner"></span> Finishing up...`;
         const data = ffmpeg.FS('readFile', 'output.mp3');
-        const mp3Blob = new Blob([data.buffer], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(mp3Blob);
+        outputBlob = new Blob([data.buffer], { type: 'audio/mpeg' });
+        outputFileName = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
+        const url = URL.createObjectURL(outputBlob);
 
         downloadLink.href = url;
-        downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
+        downloadLink.download = outputFileName;
         downloadLink.style.display = 'flex';
 
         status.innerText = 'Conversion finished!';
@@ -542,6 +545,25 @@
       } finally {
         isProcessing = false;
         convertBtn.disabled = false;
+      }
+    });
+
+    downloadLink.addEventListener('click', async (e) => {
+      if (!outputBlob) return;
+
+      const file = new File([outputBlob], outputFileName, { type: 'audio/mpeg' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        e.preventDefault();
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Save Audio',
+            text: 'Save MP3 File'
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Share failed:', err);
+        }
       }
     });
   </script>
