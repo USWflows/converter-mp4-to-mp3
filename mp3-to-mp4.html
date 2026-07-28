@@ -286,7 +286,7 @@
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Download MP4 Video
+      Save MP4 Video
     </a>
 
     <div class="status-bar" id="status">
@@ -312,6 +312,8 @@
     const downloadLink = document.getElementById('downloadLink');
 
     let selectedFile = null;
+    let outputBlob = null;
+    let outputFileName = "";
 
     async function initFFmpeg() {
       try {
@@ -384,11 +386,12 @@
 
         status.innerHTML = `<span class="spinner"></span> Finishing up...`;
         const data = ffmpeg.FS('readFile', 'output.mp4');
-        const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
-        const url = URL.createObjectURL(mp4Blob);
+        outputBlob = new Blob([data.buffer], { type: 'video/mp4' });
+        outputFileName = selectedFile.name.replace(/\.[^/.]+$/, "") + ".mp4";
+        const url = URL.createObjectURL(outputBlob);
 
         downloadLink.href = url;
-        downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + ".mp4";
+        downloadLink.download = outputFileName;
         downloadLink.style.display = 'flex';
 
         status.innerText = 'Conversion finished!';
@@ -397,6 +400,25 @@
         console.error(error);
       } finally {
         convertBtn.disabled = false;
+      }
+    });
+
+    downloadLink.addEventListener('click', async (e) => {
+      if (!outputBlob) return;
+
+      const file = new File([outputBlob], outputFileName, { type: 'video/mp4' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        e.preventDefault();
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Save Video',
+            text: 'Save MP4 Video to Photos or Files'
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Share failed:', err);
+        }
       }
     });
   </script>
