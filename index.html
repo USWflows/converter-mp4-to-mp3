@@ -483,45 +483,48 @@
     }
 
     convertBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
+  if (!selectedFile) return;
 
-      const bitrate = document.querySelector('input[name="bitrate"]:checked').value;
-      const ext = selectedFile.name.split('.').pop();
-      const inFileName = `input.${ext}`;
+  const bitrate = document.querySelector('input[name="bitrate"]:checked').value;
+  // Get original extension or default to mp4
+  const fileExt = selectedFile.name.split('.').pop() || 'mp4';
+  const inFileName = `input.${fileExt}`;
 
-      convertBtn.disabled = true;
-      downloadLink.style.display = 'none';
-      isProcessing = true;
-      status.innerHTML = `<span class="spinner"></span> Extracting audio track at ${bitrate}...`;
+  convertBtn.disabled = true;
+  downloadLink.style.display = 'none';
+  isProcessing = true;
+  status.innerHTML = `<span class="spinner"></span> Extracting audio...`;
 
-      try {
-        ffmpeg.FS('writeFile', inFileName, await fetchFile(selectedFile));
+  try {
+    // Read file as ArrayBuffer for iOS Safari compatibility
+    const fileData = await selectedFile.arrayBuffer();
+    ffmpeg.FS('writeFile', inFileName, new Uint8Array(fileData));
 
-        await ffmpeg.run(
-          '-i', inFileName,
-          '-vn',
-          '-acodec', 'libmp3lame',
-          '-b:a', bitrate,
-          'output.mp3'
-        );
+    await ffmpeg.run(
+      '-i', inFileName,
+      '-vn',
+      '-acodec', 'libmp3lame',
+      '-b:a', bitrate,
+      'output.mp3'
+    );
 
-        const data = ffmpeg.FS('readFile', 'output.mp3');
-        const mp3Blob = new Blob([data.buffer], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(mp3Blob);
+    const data = ffmpeg.FS('readFile', 'output.mp3');
+    const mp3Blob = new Blob([data.buffer], { type: 'audio/mp3' });
+    const url = URL.createObjectURL(mp3Blob);
 
-        downloadLink.href = url;
-        downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
-        downloadLink.style.display = 'flex';
+    downloadLink.href = url;
+    downloadLink.download = selectedFile.name.replace(/\.[^/.]+$/, "") + `.mp3`;
+    downloadLink.style.display = 'flex';
 
-        status.innerText = 'Conversion finished!';
-      } catch (error) {
-        status.innerText = 'An error occurred during processing.';
-        console.error(error);
-      } finally {
-        isProcessing = false;
-        convertBtn.disabled = false;
-      }
-    });
+    status.innerText = 'Conversion finished!';
+  } catch (error) {
+    status.innerText = 'Error processing mobile video. Try a smaller file.';
+    console.error(error);
+  } finally {
+    isProcessing = false;
+    convertBtn.disabled = false;
+  }
+});
   </script>
 </body>
 </html>
