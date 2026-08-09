@@ -3,21 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pulse Audio — MP4 to MP3 Converter</title>
+  <title>USW Pulse Audio — Professional WebAssembly Media Workstation</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+
   <style>
     :root {
-      --bg-dark: #090a0f;
-      --card-bg: rgba(18, 20, 29, 0.65);
-      --border-glow: rgba(99, 102, 241, 0.2);
+      --bg-dark: #05070a;
+      --card-bg: rgba(13, 16, 23, 0.88);
+      --card-border: rgba(255, 255, 255, 0.08);
       --accent-cyan: #06b6d4;
       --accent-indigo: #6366f1;
       --accent-violet: #8b5cf6;
+      --accent-emerald: #10b981;
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
+      --text-muted: #64748b;
     }
 
     * {
@@ -31,80 +36,85 @@
       min-height: 100vh;
       background: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 40%);
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 50%);
       color: var(--text-main);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 32px 16px;
       overflow-x: hidden;
     }
 
+    /* Professional Navigation Bar */
     .nav-bar {
       display: flex;
-      gap: 8px;
-      background: rgba(18, 20, 29, 0.8);
-      padding: 6px;
+      gap: 6px;
+      background: rgba(15, 18, 28, 0.9);
+      padding: 5px;
       border-radius: 100px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      margin-bottom: 24px;
-      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      margin-bottom: 28px;
+      backdrop-filter: blur(16px);
     }
 
-    .nav-link {
-      padding: 8px 18px;
+    .nav-btn {
+      padding: 10px 26px;
       border-radius: 100px;
       color: var(--text-sub);
-      text-decoration: none;
+      border: none;
+      background: transparent;
       font-size: 0.85rem;
       font-weight: 600;
-      transition: all 0.2s ease;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .nav-link.active {
+    .nav-btn.active {
       background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
     }
 
+    /* Main Studio Workstation Card */
     .app-card {
       width: 100%;
-      max-width: 540px;
+      max-width: 620px;
       background: var(--card-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--card-border);
       border-radius: 28px;
       padding: 40px;
       box-shadow: 
-        0 30px 60px -12px rgba(0, 0, 0, 0.5),
-        0 0 40px -10px var(--border-glow);
-      position: relative;
+        0 30px 60px -15px rgba(0, 0, 0, 0.8),
+        0 0 50px -10px rgba(99, 102, 241, 0.15);
     }
 
     .header {
       text-align: center;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
     }
 
-    .brand-pill {
+    .brand-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
+      gap: 8px;
+      padding: 6px 16px;
       background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.25);
       border-radius: 100px;
       color: var(--accent-cyan);
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
     }
 
-    .brand-pill-dot {
+    .brand-badge-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
@@ -114,31 +124,33 @@
 
     .title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 2.2rem;
+      font-size: 2.4rem;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.8px;
       background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .subtitle {
       color: var(--text-sub);
-      font-size: 0.9rem;
+      font-size: 0.92rem;
+      font-weight: 400;
     }
 
+    /* Dynamic Visualizer Display */
     .visualizer-container {
-      height: 48px;
+      height: 56px;
       width: 100%;
       margin-bottom: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 16px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     canvas {
@@ -146,11 +158,12 @@
       height: 100%;
     }
 
+    /* Dropzone Section */
     .drop-area {
-      border: 1.5px dashed rgba(255, 255, 255, 0.15);
-      background: rgba(255, 255, 255, 0.02);
+      border: 1.5px dashed rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.015);
       border-radius: 20px;
-      padding: 36px 20px;
+      padding: 32px 24px;
       text-align: center;
       cursor: pointer;
       transition: all 0.25s ease;
@@ -160,7 +173,7 @@
 
     .drop-area:hover, .drop-area.dragover {
       border-color: var(--accent-indigo);
-      background: rgba(99, 102, 241, 0.04);
+      background: rgba(99, 102, 241, 0.05);
       transform: translateY(-2px);
     }
 
@@ -169,111 +182,175 @@
       inset: 0;
       opacity: 0;
       cursor: pointer;
+      width: 100%;
+      height: 100%;
     }
 
     .upload-icon {
-      width: 44px;
-      height: 44px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 14px auto;
+      margin: 0 auto 12px auto;
       color: var(--accent-cyan);
-    }
-
-    .drop-text-primary {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-main);
-    }
-
-    .drop-text-secondary {
-      font-size: 0.8rem;
-      color: var(--text-sub);
-      margin-top: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .file-pill {
       display: inline-block;
       margin-top: 12px;
-      padding: 6px 14px;
+      padding: 6px 16px;
       background: rgba(6, 182, 212, 0.1);
-      border: 1px solid rgba(6, 182, 212, 0.2);
-      border-radius: 8px;
-      font-size: 0.82rem;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: 100px;
+      font-size: 0.8rem;
       color: var(--accent-cyan);
-      font-weight: 500;
+      font-weight: 600;
       word-break: break-all;
     }
 
+    /* Controls & Options Matrix */
     .control-wrapper {
-      margin-bottom: 28px;
+      margin-bottom: 24px;
+    }
+
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
     }
 
     .control-label {
-      font-size: 0.78rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
       color: var(--text-sub);
-      margin-bottom: 10px;
-      display: block;
     }
 
-    .bitrate-grid {
+    .quality-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.12);
+      padding: 3px 10px;
+      border-radius: 100px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      letter-spacing: 0.5px;
+    }
+
+    .options-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      background: rgba(0, 0, 0, 0.3);
-      padding: 4px;
-      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 5px;
+      border-radius: 16px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .bitrate-option {
-      position: relative;
-    }
-
-    .bitrate-option input {
+    .opt-item input {
       position: absolute;
       opacity: 0;
       width: 0;
       height: 0;
     }
 
-    .bitrate-label {
+    .opt-label {
       display: block;
       padding: 10px 0;
       text-align: center;
       font-size: 0.82rem;
       font-weight: 600;
       color: var(--text-sub);
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
-    .bitrate-option input:checked + .bitrate-label {
+    .opt-item input:checked + .opt-label {
       background: linear-gradient(135deg, var(--accent-indigo), var(--accent-violet));
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
     }
 
+    /* DSP Engine Panel */
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .select-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .select-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border 0.2s ease;
+    }
+
+    .select-input:focus {
+      border-color: var(--accent-indigo);
+    }
+
+    .select-input option {
+      background: #0d1017;
+      color: var(--text-main);
+    }
+
+    /* Cover Art Section */
+    .cover-upload-section {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cover-preview {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: #1e293b;
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Action Buttons */
     .btn {
       width: 100%;
       padding: 16px;
       border: none;
-      border-radius: 14px;
+      border-radius: 16px;
       font-size: 0.95rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.3px;
       cursor: pointer;
-      transition: all 0.25s ease;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       text-decoration: none;
     }
 
@@ -285,66 +362,89 @@
 
     .btn-convert:hover:not(:disabled) {
       transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(99, 102, 241, 0.5);
     }
 
     .btn-convert:disabled {
-      opacity: 0.4;
+      opacity: 0.35;
       cursor: not-allowed;
       box-shadow: none;
     }
 
     .btn-download {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, var(--accent-emerald), #059669);
       color: #ffffff;
       margin-top: 14px;
       box-shadow: 0 8px 24px -4px rgba(16, 185, 129, 0.4);
     }
 
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px -4px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Status & Progress */
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 100px;
+      margin-top: 18px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet));
+      transition: width 0.2s ease;
+    }
+
     .status-bar {
-      margin-top: 20px;
+      margin-top: 14px;
       text-align: center;
       font-size: 0.85rem;
       color: var(--text-sub);
       min-height: 20px;
+      font-weight: 500;
+    }
+
+    .preview-player {
+      width: 100%;
+      margin-top: 18px;
+      border-radius: 12px;
+      outline: none;
+      display: none;
     }
 
     .spinner {
       display: inline-block;
       width: 14px;
       height: 14px;
-      border: 2px solid rgba(255,255,255,0.2);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       border-top-color: #ffffff;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
 </head>
 <body>
 
   <nav class="nav-bar">
-    <a href="index.html" class="nav-link active">MP4 to MP3</a>
-    <a href="mp3-to-mp4.html" class="nav-link">MP3 to MP4</a>
+    <button class="nav-btn active" id="tabAudio" onclick="switchTab('audio')">Video to Audio</button>
+    <button class="nav-btn" id="tabVideo" onclick="switchTab('video')">Audio to Video</button>
   </nav>
 
   <div class="app-card">
     <div class="header">
-      <div class="brand-pill">
-        <span class="brand-pill-dot"></span> WebAssembly Engine
+      <div class="brand-badge">
+        <span class="brand-badge-dot"></span> USW Pulse Workstation
       </div>
-      <h1 class="title">Pulse Audio</h1>
-      <p class="subtitle">Extract pristine MP3 tracks directly in your browser</p>
+      <h1 class="title" id="appTitle">USW Pulse Audio</h1>
+      <p class="subtitle" id="appSubtitle">Browser-based WebAssembly audio extraction and DSP engine</p>
     </div>
 
     <div class="visualizer-container">
@@ -352,128 +452,260 @@
     </div>
 
     <div class="drop-area" id="dropZone">
-      <input type="file" id="uploader" accept="video/*,.mp4,.mov,.m4v" />
+      <input type="file" id="uploader" accept="video/*,.mp4,.mov,.m4v,.mkv,.webm" />
       <div class="upload-icon">
         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <p class="drop-text-primary" id="dropTitle">Drop your MP4 file here</p>
-      <p class="drop-text-secondary">or click to browse from device</p>
-      <div id="filePill" style="display: none;"></div>
+      <p style="font-weight: 600; font-size: 0.95rem;" id="dropTitle">Drop video source here</p>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">or click to browse local files</p>
+      <div id="filePill" class="file-pill" style="display: none;"></div>
     </div>
 
-    <div class="control-wrapper">
-      <label class="control-label">Audio Quality</label>
-      <div class="bitrate-grid">
-        <div class="bitrate-option">
+    <div class="cover-upload-section" id="coverSection" style="display: none;">
+      <img id="coverPreview" class="cover-preview" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%231e293b'><rect width='100' height='100'/></svg>" />
+      <div style="flex: 1;">
+        <label class="control-label" style="margin: 0; text-transform: none;">Cover Art Overlay</label>
+        <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Custom background image for MP4 rendering</span>
+      </div>
+      <input type="file" id="coverUploader" accept="image/*" style="font-size: 0.78rem; color: var(--text-sub); width: 110px;" />
+    </div>
+
+    <div class="control-wrapper" id="bitrateControl">
+      <div class="control-header">
+        <label class="control-label">Target Bitrate Output</label>
+        <span class="quality-badge">Studio Master</span>
+      </div>
+      <div class="options-grid">
+        <div class="opt-item">
           <input type="radio" name="bitrate" id="b128" value="128k">
-          <label for="b128" class="bitrate-label">128k</label>
+          <label for="b128" class="opt-label">128k</label>
         </div>
-        <div class="bitrate-option">
-          <input type="radio" name="bitrate" id="b192" value="192k" checked>
-          <label for="b192" class="bitrate-label">192k</label>
+        <div class="opt-item">
+          <input type="radio" name="bitrate" id="b192" value="192k">
+          <label for="b192" class="opt-label">192k</label>
         </div>
-        <div class="bitrate-option">
+        <div class="opt-item">
           <input type="radio" name="bitrate" id="b256" value="256k">
-          <label for="b256" class="bitrate-label">256k</label>
+          <label for="b256" class="opt-label">256k</label>
         </div>
-        <div class="bitrate-option">
-          <input type="radio" name="bitrate" id="b320" value="320k">
-          <label for="b320" class="bitrate-label">320k</label>
+        <div class="opt-item">
+          <input type="radio" name="bitrate" id="b320" value="320k" checked>
+          <label for="b320" class="opt-label">320k</label>
         </div>
       </div>
     </div>
 
+    <div class="settings-row" id="dspSettings">
+      <div class="select-group">
+        <label class="control-label">Sample Rate</label>
+        <select id="sampleRateSelect" class="select-input">
+          <option value="48000" selected>48,000 Hz (Studio Master)</option>
+          <option value="44100">44,100 Hz (CD Standard)</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <label class="control-label">Channel Matrix</label>
+        <select id="channelsSelect" class="select-input">
+          <option value="2" selected>Stereo (2 Channels)</option>
+          <option value="1">Mono (1 Channel)</option>
+        </select>
+      </div>
+    </div>
+
     <button id="convertBtn" class="btn btn-convert" disabled>
-      <span>Convert to MP3</span>
+      <span>Process & Extract</span>
     </button>
+
+    <div class="progress-bar-bg" id="progressBg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+
+    <div class="status-bar" id="status">
+      Initializing audio engine...
+    </div>
+
+    <audio id="audioPreview" class="preview-player" controls></audio>
+    <video id="videoPreview" class="preview-player" controls style="max-height: 220px;"></video>
 
     <a id="downloadLink" class="btn btn-download" style="display: none;">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      Save MP3 File
+      Export Converted Master
     </a>
-
-    <div class="status-bar" id="status">
-      Initializing audio engine...
-    </div>
   </div>
 
   <script>
+    let activeMode = 'audio';
+    let isProcessing = false;
+    let selectedFile = null;
+    let selectedCover = null;
+    let outputBlob = null;
+    let currentObjectUrl = null;
+    let coverObjectUrl = null;
+    let outputFileName = "";
+
+    // Dynamic Visualizer Canvas
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    let isProcessing = false;
 
     function resizeCanvas() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      canvas.width = canvas.offsetWidth || 500;
+      canvas.height = canvas.offsetHeight || 56;
     }
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
     function drawWave(time) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const bars = 32;
+      const bars = 42;
       const barWidth = 3;
-      const gap = (canvas.width - (bars * barWidth)) / (bars + 1);
+      const gap = Math.max(2, (canvas.width - (bars * barWidth)) / (bars + 1));
 
       for (let i = 0; i < bars; i++) {
         const x = gap + i * (barWidth + gap);
-        let height = isProcessing ? Math.sin(time * 0.005 + i * 0.3) * 16 + 20 : Math.sin(i * 0.4) * 4 + 8;
+        let height = isProcessing 
+          ? Math.sin(time * 0.007 + i * 0.25) * 20 + 24 
+          : selectedFile 
+            ? Math.sin(i * 0.3) * 6 + 14 
+            : 6;
+
         const y = (canvas.height - height) / 2;
-        ctx.fillStyle = isProcessing ? '#06b6d4' : '#334155';
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth, height, 2);
-        ctx.fill();
+        ctx.fillStyle = isProcessing ? '#06b6d4' : selectedFile ? '#6366f1' : '#334155';
+        ctx.fillRect(x, y, barWidth, height);
       }
       requestAnimationFrame(drawWave);
     }
     requestAnimationFrame(drawWave);
 
+    // FFmpeg Single-Thread Engine Initializer
     const { createFFmpeg } = FFmpeg;
     const ffmpeg = createFFmpeg({
-      log: true,
+      log: false,
       mainName: 'main',
       corePath: 'https://unpkg.com/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
     });
 
-    const uploader = document.getElementById('uploader');
-    const dropZone = document.getElementById('dropZone');
-    const dropTitle = document.getElementById('dropTitle');
-    const filePill = document.getElementById('filePill');
-    const convertBtn = document.getElementById('convertBtn');
     const status = document.getElementById('status');
-    const downloadLink = document.getElementById('downloadLink');
-
-    let selectedFile = null;
-    let outputBlob = null;
-    let outputFileName = "";
 
     ffmpeg.setProgress(({ ratio }) => {
       if (isProcessing && ratio > 0) {
         const percent = Math.min(Math.round(ratio * 100), 100);
-        status.innerHTML = `<span class="spinner"></span> Converting... ${percent}%`;
+        document.getElementById('progressFill').style.width = `${percent}%`;
+        status.innerHTML = `<span class="spinner"></span> Processing Media... ${percent}%`;
       }
     });
 
     async function initFFmpeg() {
       try {
-        status.innerText = 'Downloading audio engine...';
+        status.innerText = 'Loading WebAssembly engine...';
         await ffmpeg.load();
-        status.innerText = 'Engine ready. Drop a file to start.';
-        if (selectedFile) convertBtn.disabled = false;
+        status.innerText = 'Workstation ready. Select a file to begin.';
+        if (selectedFile) document.getElementById('convertBtn').disabled = false;
       } catch (error) {
-        status.innerText = 'Failed to load engine. Please refresh page.';
+        status.innerText = 'Failed to load core engine. Please reload.';
         console.error(error);
       }
     }
-
     initFFmpeg();
+
+    // Mode Switcher Logic
+    function switchTab(mode) {
+      if (isProcessing) return;
+      activeMode = mode;
+      selectedFile = null;
+      selectedCover = null;
+      
+      document.getElementById('tabAudio').classList.toggle('active', mode === 'audio');
+      document.getElementById('tabVideo').classList.toggle('active', mode === 'video');
+
+      const uploader = document.getElementById('uploader');
+      const dropTitle = document.getElementById('dropTitle');
+      const coverSection = document.getElementById('coverSection');
+      const bitrateControl = document.getElementById('bitrateControl');
+
+      if (mode === 'audio') {
+        document.getElementById('appTitle').innerText = "USW Pulse Audio";
+        document.getElementById('appSubtitle').innerText = "Browser-based WebAssembly audio extraction and DSP engine";
+        dropTitle.innerText = "Drop video source here";
+        uploader.accept = "video/*,.mp4,.mov,.m4v,.mkv,.webm";
+        coverSection.style.display = "none";
+        bitrateControl.style.display = "block";
+      } else {
+        document.getElementById('appTitle').innerText = "USW Pulse Video";
+        document.getElementById('appSubtitle').innerText = "Convert high-fidelity audio into shareable MP4 video masters";
+        dropTitle.innerText = "Drop audio source here";
+        uploader.accept = "audio/*,.mp3,.wav,.m4a,.flac";
+        coverSection.style.display = "flex";
+        bitrateControl.style.display = "none";
+      }
+
+      resetUI();
+    }
+
+    function resetUI() {
+      document.getElementById('uploader').value = "";
+      document.getElementById('coverUploader').value = "";
+      document.getElementById('filePill').style.display = 'none';
+      document.getElementById('convertBtn').disabled = true;
+      document.getElementById('downloadLink').style.display = 'none';
+      document.getElementById('progressBg').style.display = 'none';
+      document.getElementById('coverPreview').src = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%231e293b'><rect width='100' height='100'/></svg>";
+      
+      const audioPreview = document.getElementById('audioPreview');
+      const videoPreview = document.getElementById('videoPreview');
+      audioPreview.pause();
+      videoPreview.pause();
+      audioPreview.style.display = 'none';
+      videoPreview.style.display = 'none';
+
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+      if (coverObjectUrl) {
+        URL.revokeObjectURL(coverObjectUrl);
+        coverObjectUrl = null;
+      }
+
+      status.innerText = ffmpeg.isLoaded() ? 'Workstation ready. Select a file to begin.' : 'Initializing audio engine...';
+    }
+
+    // High-Resolution Standard Canvas Frame Generator
+    function generateFallbackImageBuffer() {
+      const imgCanvas = document.createElement('canvas');
+      imgCanvas.width = 1280;
+      imgCanvas.height = 720;
+      const imgCtx = imgCanvas.getContext('2d');
+      imgCtx.fillStyle = '#05070a';
+      imgCtx.fillRect(0, 0, 1280, 720);
+      
+      return new Promise((resolve) => {
+        imgCanvas.toBlob(async (blob) => {
+          const buffer = await blob.arrayBuffer();
+          resolve(new Uint8Array(buffer));
+        }, 'image/png');
+      });
+    }
+
+    // Input Listeners
+    const uploader = document.getElementById('uploader');
+    const dropZone = document.getElementById('dropZone');
+    const coverUploader = document.getElementById('coverUploader');
 
     uploader.addEventListener('change', (e) => {
       if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
+    });
+
+    coverUploader.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        selectedCover = e.target.files[0];
+        if (coverObjectUrl) URL.revokeObjectURL(coverObjectUrl);
+        coverObjectUrl = URL.createObjectURL(selectedCover);
+        document.getElementById('coverPreview').src = coverObjectUrl;
+      }
     });
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
@@ -487,79 +719,146 @@
 
     function handleFileSelect(file) {
       selectedFile = file;
-      dropTitle.innerText = 'File loaded';
+      document.getElementById('dropTitle').innerText = 'Source loaded';
+      const filePill = document.getElementById('filePill');
       filePill.innerText = `${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
       filePill.style.display = 'inline-block';
       
-      convertBtn.disabled = !ffmpeg.isLoaded();
-      downloadLink.style.display = 'none';
+      document.getElementById('convertBtn').disabled = !ffmpeg.isLoaded();
+      document.getElementById('downloadLink').style.display = 'none';
       
       if (ffmpeg.isLoaded()) {
-        status.innerText = 'File ready. Click Convert to start.';
-      } else {
-        status.innerText = 'File selected. Waiting for engine to finish loading...';
+        status.innerText = 'Source ready. Click Process & Extract to start.';
       }
     }
 
-    convertBtn.addEventListener('click', async () => {
-      if (!selectedFile) return;
+    // Conversion Engine Trigger
+    document.getElementById('convertBtn').addEventListener('click', async () => {
+      if (!selectedFile || isProcessing) return;
 
-      const bitrate = document.querySelector('input[name="bitrate"]:checked')?.value || '192k';
-      const ext = selectedFile.name.split('.').pop() || 'mp4';
-      const inFileName = `input.${ext}`;
+      const convertBtn = document.getElementById('convertBtn');
+      const downloadLink = document.getElementById('downloadLink');
+      const progressBg = document.getElementById('progressBg');
+      const progressFill = document.getElementById('progressFill');
 
       convertBtn.disabled = true;
       downloadLink.style.display = 'none';
+      progressBg.style.display = 'block';
+      progressFill.style.width = '0%';
       isProcessing = true;
 
+      if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+      }
+
+      const fileExt = selectedFile.name.split('.').pop() || 'tmp';
+      const inputName = `input_${Date.now()}.${fileExt}`;
+      let coverName = null;
+
       try {
-        status.innerHTML = `<span class="spinner"></span> Reading file into memory...`;
+        status.innerHTML = `<span class="spinner"></span> Loading source into VFS...`;
         const fileData = await selectedFile.arrayBuffer();
-        
-        status.innerHTML = `<span class="spinner"></span> Preparing encoder...`;
-        ffmpeg.FS('writeFile', inFileName, new Uint8Array(fileData));
+        ffmpeg.FS('writeFile', inputName, new Uint8Array(fileData));
 
-        status.innerHTML = `<span class="spinner"></span> Starting conversion...`;
-        await ffmpeg.run(
-          '-i', inFileName,
-          '-vn',
-          '-acodec', 'libmp3lame',
-          '-b:a', bitrate,
-          'output.mp3'
-        );
+        const sampleRate = document.getElementById('sampleRateSelect').value;
+        const channels = document.getElementById('channelsSelect').value;
 
-        status.innerHTML = `<span class="spinner"></span> Finishing up...`;
-        const data = ffmpeg.FS('readFile', 'output.mp3');
-        outputBlob = new Blob([data.buffer], { type: 'audio/mpeg' });
-        outputFileName = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
-        const url = URL.createObjectURL(outputBlob);
+        if (activeMode === 'audio') {
+          const bitrate = document.querySelector('input[name="bitrate"]:checked')?.value || '320k';
+          status.innerHTML = `<span class="spinner"></span> Encoding high-fidelity MP3 master...`;
+          
+          await ffmpeg.run(
+            '-i', inputName,
+            '-vn',
+            '-acodec', 'libmp3lame',
+            '-q:a', '0',
+            '-b:a', bitrate,
+            '-ar', sampleRate,
+            '-ac', channels,
+            'output.mp3'
+          );
+          
+          const data = ffmpeg.FS('readFile', 'output.mp3');
+          outputBlob = new Blob([data.buffer], { type: 'audio/mpeg' });
+          outputFileName = selectedFile.name.replace(/\.[^/.]+$/, "") + `_${bitrate}.mp3`;
+          
+          currentObjectUrl = URL.createObjectURL(outputBlob);
+          const audioPreview = document.getElementById('audioPreview');
+          audioPreview.src = currentObjectUrl;
+          audioPreview.style.display = 'block';
 
-        downloadLink.href = url;
+          try { ffmpeg.FS('unlink', 'output.mp3'); } catch(e){}
+        } else {
+          status.innerHTML = `<span class="spinner"></span> Rendering studio MP4 video frame...`;
+          coverName = `cover_${Date.now()}.png`;
+
+          if (selectedCover) {
+            const coverData = await selectedCover.arrayBuffer();
+            ffmpeg.FS('writeFile', coverName, new Uint8Array(coverData));
+          } else {
+            const fallbackData = await generateFallbackImageBuffer();
+            ffmpeg.FS('writeFile', coverName, fallbackData);
+          }
+
+          await ffmpeg.run(
+            '-loop', '1',
+            '-i', coverName,
+            '-i', inputName,
+            '-c:v', 'libx264',
+            '-preset', 'ultrafast',
+            '-profile:v', 'high',
+            '-level', '4.0',
+            '-c:a', 'aac',
+            '-b:a', '256k',
+            '-ar', sampleRate,
+            '-pix_fmt', 'yuv420p',
+            '-shortest',
+            'output.mp4'
+          );
+
+          const data = ffmpeg.FS('readFile', 'output.mp4');
+          outputBlob = new Blob([data.buffer], { type: 'video/mp4' });
+          outputFileName = selectedFile.name.replace(/\.[^/.]+$/, "") + ".mp4";
+
+          currentObjectUrl = URL.createObjectURL(outputBlob);
+          const videoPreview = document.getElementById('videoPreview');
+          videoPreview.src = currentObjectUrl;
+          videoPreview.style.display = 'block';
+
+          try { ffmpeg.FS('unlink', 'output.mp4'); } catch(e){}
+        }
+
+        downloadLink.href = currentObjectUrl;
         downloadLink.download = outputFileName;
         downloadLink.style.display = 'flex';
 
-        status.innerText = 'Conversion finished!';
+        status.innerText = 'Master conversion complete!';
       } catch (error) {
-        status.innerText = 'Error converting file. Please try again.';
+        status.innerText = 'Error processing media. Try another input file.';
         console.error(error);
       } finally {
+        try { ffmpeg.FS('unlink', inputName); } catch(e){}
+        if (coverName) { try { ffmpeg.FS('unlink', coverName); } catch(e){} }
+
         isProcessing = false;
         convertBtn.disabled = false;
       }
     });
 
-    downloadLink.addEventListener('click', async (e) => {
+    // Native Web Share and Export Handler
+    document.getElementById('downloadLink').addEventListener('click', async (e) => {
       if (!outputBlob) return;
-
-      const file = new File([outputBlob], outputFileName, { type: 'audio/mpeg' });
+      const mime = activeMode === 'audio' ? 'audio/mpeg' : 'video/mp4';
+      const file = new File([outputBlob], outputFileName, { type: mime });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         e.preventDefault();
         try {
           await navigator.share({
             files: [file],
-            title: 'Save Audio',
-            text: 'Save MP3 File'
+            title: 'Export USW Pulse Audio Master',
+            text: 'Save converted audio/video file'
           });
         } catch (err) {
           if (err.name !== 'AbortError') console.error('Share failed:', err);
