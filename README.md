@@ -1,67 +1,47 @@
-# 🎵 Pulse Audio — WebAssembly Media Workstation
+USW Pulse Studio 2.0
+An upgraded, privacy-minded audio/video converter for your browser. Built from the supplied converter-mp4-to-mp3-main project by USWflows. The app does not require an account or a server to process media: files are read and converted locally in the browser using FFmpeg WebAssembly.
+What's new
+- A refreshed, responsive interface with accessible keyboard controls and light/dark themes.
+- Video → audio with MP3, M4A (AAC), WAV (16-bit PCM), and FLAC output.
+- Audio → MP4 video with optional cover art or automatically generated artwork and 720p/1080p export.
+- Batch queue with up to 20 files, individual progress, errors, file previews, and separate downloads.
+- 128–320 kbps encoding, 44.1/48 kHz sample rate, mono/stereo.
+- Start/end trimming, adjustable output volume, and optional loudness normalization.
+- Optional native system sharing (where supported), saved preferences, and PWA manifest/icons.
+- Safer memory limits, output cleanup, stop/restart controls, explicit engine-load errors, and UI-shell caching.
+Files (keep all of these together)
+File	Purpose
+index.html	Main interface
+styles.css	Layout, themes, responsive styling
+app.js	Queue, FFmpeg integration, controls, previews
+manifest.json	Installable app metadata
+sw.js	Cache for the local app interface
+icon-192.png	Small app icon
+icon-512.png	Large app icon
+README.md	Setup and usage
+LICENSE	Original license retained
+.github/workflows/blank.yml	Project syntax checks on GitHub
+.github/workflows/static.yml	GitHub Pages deployment workflow
 
-**Pulse Audio** is a lightweight, high-performance, browser-based media conversion suite powered by WebAssembly (FFmpeg). It allows users to convert video to audio and render audio files into shareable MP4 video containers directly on their device without uploading files to external servers.
 
----
-
-## 👨‍💻 Created By
-
-**USWflows**
-
----
-
-## 💡 How It Works
-
-Pulse Audio runs **100% client-side** inside the user's web browser:
-
-1. **Virtual Filesystem (VFS):** When a file is uploaded via drag-and-drop or file picker, it is loaded into the browser memory using FFmpeg's Virtual Filesystem.
-2. **In-Browser Processing:** The core audio/video processing engine relies on WebAssembly (`@ffmpeg/ffmpeg` / `ffmpeg-core-st`). FFmpeg commands execute locally in your browser environment without needing backend server resources.
-3. **Local Export & Web Share:** Once processed, the engine generates an output Blob and Object URL. You can download the master file directly or save/share it using the native Web Share API on supported devices.
-
----
-
-## ✨ Key Features
-
-### 🎧 MP4 to MP3 Extraction (`index.html`)
-- **Custom Bitrate Options:** Choose target audio bitrates (**128k, 192k, 256k, 320k**).
-- **High-Fidelity Audio:** Encoded using `libmp3lame` for crystal-clear master tracks.
-- **Dynamic Waveform Visualizer:** Real-time HTML5 `<canvas>` audio visualizer animation during playback and processing.
-- **Multiple Video Formats:** Supports `.mp4`, `.mov`, `.m4v`, `.webm`, and `.mkv`.
-
-### 🎬 MP3 to MP4 Video Generation (`mp3-to-mp4.html`)
-- **Audio to Video Conversion:** Converts `.mp3`, `.wav`, or `.m4a` files into lightweight `.mp4` video containers.
-- **Optimized Video Encoding:** Utilizes `libx264` and `aac` with a still image background frame for optimized file sizes and platform compatibility.
-
-### 📱 Progressive Web App (PWA) & Offline Ready
-- **PWA Integration:** Equipped with `manifest.json` and `sw.js` (Service Worker) for installability on mobile and desktop.
-- **Privacy First:** Your files **never leave your device**—no cloud uploads, zero bandwidth costs, and complete data privacy.
-- **Native Device Sharing:** Built-in support for `navigator.share()` allowing direct exports to iOS Photos/Files or Android share menus.
-- **Modern UI:** Designed with a sleek glassmorphism aesthetic using Plus Jakarta Sans and Space Grotesk typography.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-All you need is a modern web browser with WebAssembly support (Chrome, Edge, Safari, Firefox, Opera).
-
-### Running Locally
-1. Clone or download this repository.
-2. Serve the directory using any HTTP local server (e.g., Live Server in VS Code, `npx serve`, or `python3 -m http.server`).
-   > *Note: Running directly via `file://` protocol may block Service Worker registration or WebAssembly scripts due to browser CORS policies.*
-3. Open `http://localhost:3000` (or your local server URL) in your browser.
-
----
-
-## 🛠️ Built With
-
-* **HTML5 / CSS3 / JavaScript (ES6+)**
-* **[FFmpeg WebAssembly](https://github.com/ffmpegwasm/ffmpeg.wasm)** (`@ffmpeg/ffmpeg` v0.11.6)
-* **HTML5 Canvas API**
-* **Web Share API & Service Workers**
-
----
-
-## 📄 License
-
-Created with ❤️ by **USWflows**. Open for personal and educational use.
+All media files are kept in your browser memory, not uploaded by this app. External Google Fonts from the old project were removed, so only the conversion engine is a third-party runtime dependency. The app downloads the @ffmpeg/ffmpeg@0.11.6 script and @ffmpeg/core-st@0.11.1 WebAssembly engine from CDNs; internet access is required for that first load (and again when the engine is not browser-cached). The service worker caches the local app shell only; it does not guarantee offline transcoding.
+Run locally (Windows, simple)
+1. Put the separately downloaded files inside one folder, with the names shown above.
+2. In that folder, open Windows Terminal or Command Prompt and run:
+   py -m http.server 8000
+   If py isn't available, try python -m http.server 8000. Python isn't needed on a normal HTTPS hosting service.
+3. Open http://localhost:8000/ in Chrome or Edge, with internet connected.
+4. Drag in your video or audio files, choose settings, select Convert files, and use Download beside each result.
+You can also deploy all these files to the same folder on a standard static HTTPS web host (including GitHub Pages). No server-side conversion code is required.
+Known limits and accuracy notes
+- Browser memory and WebAssembly runtime constraints are far tighter than desktop FFmpeg. To reduce crashes, each input is capped at 400 MB; very long or complex videos may still exceed browser memory. Do smaller batches if memory is limited.
+- A 320 kbps output setting does not restore quality lost in a lower-quality source. WAV/FLAC preserve the output of decoding, not an original's lost information.
+- The MP4 cover is a 2 fps still image encoded to H.264 and AAC. Encoding 1080p is slower than 720p. Unsupported formats/codec combinations may not work even if a filename extension is recognized.
+- Media without an audio stream cannot be extracted; such files show an error.
+- Stop terminates and reloads the FFmpeg WebAssembly engine. Work on the active file is discarded; completed exports remain available.
+- Some browsers limit automatic multi-file downloads. Every result has a reliable individual Download link.
+- Some mobile browsers have lower memory limits or limited WebAssembly support.
+- Do not open using file:// if the conversion engine won't load. Serve over http://localhost or HTTPS.
+- The service worker requires localhost/HTTPS and is optional; external FFmpeg resources aren't pre-cached by it.
+Source and licensing
+Keeps the original project license in LICENSE. The FFmpeg runtime is independently licensed; review licensing terms when distributing an app with bundled codec components. Third-party engine dependency URLs can be found in index.html and app.js.
